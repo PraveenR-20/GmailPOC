@@ -1,17 +1,19 @@
-﻿using Gmail_POC.API;
-using Gmail_POC.API.Controllers;
+﻿using Gmail_POC.API.Controllers;
 using Gmail_POC.Application.Interfaces;
+using Gmail_POC.Application.Services;
+using Gmail_POC.Data.Context;
 using Gmail_POC.Data.Interfaces;
-using Gmail_POC.Data.Models;
-using Google.Apis.Calendar.v3.Data;
+using Gmail_POC.Data.Repositories;
+using Gmail_POC.UnitTests.Helpers;
+using Gmail_POC.Utility.ConfigurationSettings;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Moq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -20,96 +22,66 @@ namespace Gmail_POC.UnitTests.API.Controllers
 
     public class UserControllerTests
     {
-        private readonly Mock<IUserService> mockUserService = new Mock<IUserService>();
-        private IConfiguration configuration { get; set; }
-        private readonly UsersController userController;
+        private readonly IUserService _userService;
+        private readonly UserRepository _userRepository;
+        private readonly UsersController _userController;
+        private readonly UserSecretSetting _userSecretSetting;
+        private readonly ILogger<UserService> _userServiceLogger = null;
+        private readonly IStringLocalizer<UsersController> _localizer;
+        private readonly UserContext _userContext;
+        private IConfiguration _config { get; }
 
         public UserControllerTests()
         {
-            var logger = new Mock<ILogger<UsersController>>();
-            var mapper = new Mock<IStringLocalizer<SharedResources>>();
+            var _config = new ConfigurationBuilder().AddUserSecrets<UserControllerTests>().Build();
+
+            var _logger = new Mock<ILogger<UsersController>>();
+            _userSecretSetting = new UserSecretSetting()
+            {
+                EncryptionKey = _config["EncryptionKey"],
+                GoogleClientId = _config["Authentication:Google:ClientId"],
+                GoogleClientSecret = _config["Authentication:Google:ClientSecret"]
+            };
+            var userSettingOption = Options.Create(_userSecretSetting);
             var userRepositoryMock = new Mock<IUserRepository>();
-
-            var builder = new ConfigurationBuilder()
-             .AddUserSecrets<UserControllerTests>();
-
-            configuration = builder.Build();
-
-            //setup 
-            mockUserService.Setup(p => p.AddEvents(new Gmail_POC.Data.Models.UserEvent())).ReturnsAsync(true);
-            mockUserService.Setup(p => p.GetUserEventByCalId("333dki70tnger4kpqnpjtqt8ir@google.com", DateTime.Now, DateTime.Now)).ReturnsAsync(new Gmail_POC.Data.Models.UserEvent());
-            mockUserService.Setup(p => p.AddEventAttendees(new List<Gmail_POC.Data.Models.EventAttendee>())).ReturnsAsync(true);
-            mockUserService.Setup(p => p.AddRecurringEvents(new List<Gmail_POC.Data.Models.UserRecurringEvent>())).ReturnsAsync(true);
-            mockUserService.Setup(p => p.GetEventAttendeesByUserEventId(103)).ReturnsAsync(new List<Gmail_POC.Data.Models.EventAttendee>());
-            mockUserService.Setup(p => p.GetRecurringEventByUserEventId(103)).ReturnsAsync(new List<Gmail_POC.Data.Models.UserRecurringEvent>());
-            mockUserService.Setup(p => p.UpdateUserEvent(new Gmail_POC.Data.Models.UserEvent())).ReturnsAsync(true);
-            mockUserService.Setup(p => p.GetUserEventByRecurringId("333dki70tnger4kpqnpjtqt8ir@google.com")).ReturnsAsync(new Gmail_POC.Data.Models.UserEvent());
-            mockUserService.Setup(p => p.DeleteRecurringEvents(new List<Gmail_POC.Data.Models.UserRecurringEvent>())).ReturnsAsync(true);
-            mockUserService.Setup(p => p.DeleteEventAttendees(new List<Gmail_POC.Data.Models.EventAttendee>())).ReturnsAsync(true);
-            mockUserService.Setup(p => p.GetUserEventExceptsCalId(new List<string>() { })).ReturnsAsync(new List<Gmail_POC.Data.Models.UserEvent>());
-            mockUserService.Setup(p => p.DeleteUserEvents(new List<int>() { 103 })).ReturnsAsync(true);
-            mockUserService.Setup(p => p.AddUser(new Gmail_POC.Data.Models.Users())).ReturnsAsync(true);
-            mockUserService.Setup(p => p.IsUserExist("test@test.com")).ReturnsAsync(true);
-
-            userController = new UsersController(mockUserService.Object, logger.Object, mapper.Object, configuration);
+            var builder = new ConfigurationBuilder().AddUserSecrets<UserControllerTests>();
+            var options = Options.Create(new LocalizationOptions { ResourcesPath = "Resources" });
+            var factory = new ResourceManagerStringLocalizerFactory(options, NullLoggerFactory.Instance);
+            _localizer = new StringLocalizer<UsersController>(factory);
+            var usersDbOptions = new DbContextOptionsBuilder<UserContext>().UseInMemoryDatabase(databaseName: "GmailPOC").Options;
+            _userContext = new UserContext(usersDbOptions);
+            TestHelper.AddDummyEventData(_userContext);
+            TestHelper.AddDummyEventAttendee(_userContext);
+            TestHelper.AddDummyRecurringEvent(_userContext);
+            _userRepository = new UserRepository(_userContext);
+            _userService = new UserService(_userServiceLogger, _userRepository);
+            _userController = new UsersController(_userService, _logger.Object, userSettingOption, _localizer);
         }
-    
-        [Fact]        
-        public async Task GetEvents_SuccessTest()
-        {            
-            var boundaryStartDate = DateTime.Now;
-
-            var events = await userController.GetEvents();
-            var okResult = events as OkObjectResult;
-            var response = (List<Event>)okResult.Value;
-            response = response.Where(a => a.Start.DateTime >= boundaryStartDate).ToList();
-
-            if (response.Count() > 0)
-                Assert.True(true);
-            else
-                Assert.False(false);
+      
+        [Fact]
+        public async Task GetEventsAsyncTest()
+        {
+            var response = await _userController.GetEvents();
+            Assert.IsType<OkObjectResult>(response);
         }
+
 
         [Fact]
-        public async Task GetEvents_NoContentTest()
+        public async Task GetAllUsersAsyncTest()
         {
-            var boundaryStartDate = DateTime.Now;
-
-            var events = await userController.GetEvents();
-            var result = events as OkObjectResult;
-            var response = (List<Event>)result.Value;
-            response = response.Where(a => a.Start.DateTime >= boundaryStartDate).ToList();
-
-            if (response.Count() == 0)
-                Assert.True(true);
-            else
-                Assert.False(false);
+            var response = await _userController.Get();
+            Assert.IsType<OkObjectResult>(response);
         }
-
         [Fact]
-        public async Task GetUsers_SuccessTest()
+        public async Task GetAllUsersAsync_NoContentTest()
         {
-            var users = await userController.Get();
-            var result = users as OkObjectResult;
-            var response = (IEnumerable<Users>)result.Value;
-
-            if (response.Count() > 0) 
-                Assert.True(true);
-            else 
-                Assert.False(false);
+            var failResponse = await _userController.Get();
+            await Task.CompletedTask;
+            if (failResponse == null)
+            {
+                Assert.IsType<NoContentResult>(failResponse);
+            }
         }
 
-        [Fact]
-        public async Task GetUsers_NoContentTest()
-        {
-            var users = await userController.Get();
-            var result = users as OkObjectResult;
-            var response = (IEnumerable<Users>)result.Value;
-
-            if (response.Count() == 0)
-                Assert.True(true);
-            else
-                Assert.False(false);
-        }
     }
 }

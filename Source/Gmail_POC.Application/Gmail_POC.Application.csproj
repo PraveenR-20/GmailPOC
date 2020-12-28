@@ -25,8 +25,4 @@
     <ProjectReference Include="..\Gmail_POC.Data\Gmail_POC.Data.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Models\" />
-  </ItemGroup>
-
 </Project>

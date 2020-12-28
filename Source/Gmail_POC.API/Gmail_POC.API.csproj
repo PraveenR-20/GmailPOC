@@ -7,19 +7,9 @@
 
   <ItemGroup>
     <Compile Remove="Filters\**" />
-    <Compile Remove="Resources\**" />
     <Content Remove="Filters\**" />
-    <Content Remove="Resources\**" />
     <EmbeddedResource Remove="Filters\**" />
-    <EmbeddedResource Remove="Resources\**" />
     <None Remove="Filters\**" />
-    <None Remove="Resources\**" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Models\ValidationError.cs" />
-    <Compile Remove="Models\ValidationFailedResult.cs" />
-    <Compile Remove="Models\ValidationResultModel.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,6 +26,7 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="3.1.10" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.7" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="RestSharp" Version="106.11.7" />

@@ -1,19 +1,10 @@
 ﻿using Gmail_POC.Data.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace Gmail_POC.Data.Context
 {
     public partial class UserContext : DbContext
-    {
-        IConfiguration Configuration { get; set; }
-        public UserContext()
-        {
-            var builder = new ConfigurationBuilder()
-                 .AddUserSecrets<UserContext>();
-
-            Configuration = builder.Build();
-        }
+    {       
 
         public UserContext(DbContextOptions<UserContext> options)
             : base(options)
@@ -27,10 +18,6 @@ namespace Gmail_POC.Data.Context
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            if (!optionsBuilder.IsConfigured)
-            {
-                optionsBuilder.UseSqlServer(Configuration["ConnectionStrings:DbConnString"]);
-            }
         }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

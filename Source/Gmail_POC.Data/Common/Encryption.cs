@@ -9,6 +9,12 @@ namespace Gmail_POC.Data.Common
     {
 
         #region Encrypt Secrets
+        /// <summary>
+        /// Method used for encrypt secrets
+        /// </summary>
+        /// <param name="inputText"></param>
+        /// <param name="encryptionKey"></param>
+        /// <returns></returns>
         public static string EncryptSecrets(string inputText, string encryptionKey)
         {
             string encyptKey = encryptionKey;
@@ -35,6 +41,12 @@ namespace Gmail_POC.Data.Common
         #endregion
 
         #region Decrypt Secrets
+        /// <summary>
+        /// Method used for decrypt secrets
+        /// </summary>
+        /// <param name="inputText"></param>
+        /// <param name="encryptionKey"></param>
+        /// <returns></returns>
         public static string DecryptSecrets(string inputText, string encryptionKey)
         {
             string encyptKey = encryptionKey;

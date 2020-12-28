@@ -19,23 +19,18 @@ namespace Gmail_POC.API
 
         public IConfiguration Configuration { get; }
 
-        // This method gets called by the runtime. Use this method to add services to the container.
+  
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddLocalization(options => options.ResourcesPath = "Resources");
-
             services.AddControllers();
-
             services.AddMvc();
-
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo { Title = "Gmail POC", Version = "v1" });
             });
-
             services.AddHealthChecks();
             RegisterServices(services, Configuration);
-          
         }
 
         private void RegisterServices(IServiceCollection services, IConfiguration configuration)
@@ -47,31 +42,24 @@ namespace Gmail_POC.API
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
         {
             app.UseRequestLocalization(GetRequestLocalizationOptions());
-
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseHttpsRedirection();
-
             app.UseSwagger();
             app.UseSwaggerUI(c =>
             {
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Gmail POC V1");
             });
-
             app.UseRouting();
-
             app.UseAuthorization();
-
             app.UseEndpoints(endpoints =>
             {               
                 endpoints.MapHealthChecks("/health");
                 endpoints.MapControllers();
             });
         }
-
         private RequestLocalizationOptions GetRequestLocalizationOptions()
         {
             var supportedCultures = new[]

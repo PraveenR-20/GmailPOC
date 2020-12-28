@@ -7,6 +7,14 @@ namespace Gmail_POC.Data.Common
 {
     public static partial class Common
     {
+
+        /// <summary>
+        /// This method will used for prepare event data model object
+        /// </summary>
+        /// <param name="eventAttendee"></param>
+        /// <param name="a"></param>
+        /// <param name="userEventId"></param>
+        /// <returns></returns>
         public static Gmail_POC.Data.Models.EventAttendee PrepareEventAttendeeDataModel(Gmail_POC.Data.Models.EventAttendee eventAttendee, Google.Apis.Calendar.v3.Data.EventAttendee a, int userEventId)
         {
             eventAttendee.UserEventId = userEventId;
@@ -20,6 +28,13 @@ namespace Gmail_POC.Data.Common
             return eventAttendee;
         }
 
+        /// <summary>
+        /// This method will used for prepare reccuring event data model
+        /// </summary>
+        /// <param name="userRecurringEvent"></param>
+        /// <param name="_u"></param>
+        /// <param name="userEventId"></param>
+        /// <returns></returns>
         public static UserRecurringEvent PrepareUserRecurringEventDataModel(UserRecurringEvent userRecurringEvent, Event _u, int userEventId)
         {
             userRecurringEvent.RecurringEventId = _u.RecurringEventId;
@@ -37,6 +52,12 @@ namespace Gmail_POC.Data.Common
             return userRecurringEvent;
         }
 
+        /// <summary>
+        /// this method will prepare event list data model
+        /// </summary>
+        /// <param name="evts"></param>
+        /// <param name="firstEvent"></param>
+        /// <returns></returns>
         public static UserEvent PrepareUserEventDataModel(UserEvent evts, Event firstEvent)
         {
             evts.AnyoneCanAddSelf = Convert.ToBoolean(firstEvent.AnyoneCanAddSelf);
@@ -75,6 +96,11 @@ namespace Gmail_POC.Data.Common
             return evts;
         }
 
+        /// <summary>
+        /// This method is used for check valid email Id
+        /// </summary>
+        /// <param name="emailAddress"></param>
+        /// <returns></returns>
         public static bool IsValidEmail(string emailAddress)
         {            
             try

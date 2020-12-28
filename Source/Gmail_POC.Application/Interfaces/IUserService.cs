@@ -24,7 +24,7 @@ namespace Gmail_POC.Application.Interfaces
         Task<bool> AddUser(Users user);
         Task<bool> IsUserExist(string email);
         Task<IEnumerable<Users>> GetUsers();
-
+        Task ManageEvents(Google.Apis.Calendar.v3.Data.Events events);
         #endregion
     }
 }

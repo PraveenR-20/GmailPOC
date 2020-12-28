@@ -8,36 +8,28 @@ using msExteisons = Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Gmail_POC.Data.Context;
 using Microsoft.EntityFrameworkCore;
-using AutoMapper;
+using Gmail_POC.Utility.ConfigurationSettings;
 
 namespace Gmail_POC.IoC
 {
     public static class DependencyContainer
     {
         public static void RegisterServices(IServiceCollection services, msExteisons.IConfiguration configuration)
-        
+
         {
-            // Auto Mapper Configurations
-            var mapperConfig = new MapperConfiguration(mc =>
-            {
-                mc.AddProfile(new MappingProfile());
-            });
-
-            //dbcontext initialization
             services.AddDbContext<UserContext>(options =>
-                options.UseSqlServer(configuration["ConnectionStrings:DbConnString"]));            
-            
-            // appstting configurations
-            services.Configure<ConnectionStringSettings>
-                (options => configuration.GetSection("Connectionstrings").Bind(options));
+                options.UseSqlServer(configuration["ConnectionStrings:DbConnString"]));
 
-            IMapper mapper = mapperConfig.CreateMapper();
-            services.AddSingleton(mapper);
+            services.Configure<UserSecretSetting>
+                (options =>
+                {
+                    options.GoogleClientSecret = configuration["Authentication:Google:ClientSecret"];
+                    options.GoogleClientId = configuration["Authentication:Google:ClientId"];
+                    options.EncryptionKey = configuration["EncryptionKey"];
+                });
 
-            //Application Services
+            services.AddTransient<UserSecretSetting>();
             services.AddTransient<IUserService, UserService>();
-
-            //Data
             services.AddTransient<IUserRepository, UserRepository>();
         }
     }
